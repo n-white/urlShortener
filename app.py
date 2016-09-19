@@ -2,9 +2,40 @@ from flask import Flask, request, render_template
 import sqlite3
 from sqlite3 import OperationalError
 import json
+import short_url
+
 
 # Declare app variable
 app = Flask(__name__)
+
+# String of characters referened for encoding and decoding
+base_62_alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+# Function to encode string using base 62 methodology
+def encode_base62(num, alphabet=base_62_alphabet):
+	if num == 0:
+		return alphabet[0]
+	result = []
+	base = len(alphabet)
+	while num:
+		num, rem = divmod(num, base)
+		result.append(alphabet[rem])
+	result.reverse()
+	return ''.join(result)
+
+def decode_base62(string, alphabet=base_62_alphabet):
+	base = len(alphabet)
+	string_length = len(string)
+	num = 0
+	index = 0
+	for i in string:
+		power = (string_length - (index + 1))
+		num += alphabet.index(i) * (base ** power)
+		index += 1
+	return num
+
+test = decode_base62('3e')
+print test
 
 def table_schema():
 	# Create url_data table in SQL
@@ -26,25 +57,26 @@ def table_schema():
 @app.route('/', methods=['POST', 'GET'])
 def homepage():
 	actual_url = request.form.get('actual_url')
+	# shortened_url = short_url.decode_url(actual_url)
 	if request.method == 'POST':
 		with sqlite3.connect('url.db') as db:
 			cursor = db.cursor()
 			query = """
-				INSERT INTO url_data (shortened_url)
-				VALUES ('%s')
-			"""%(actual_url)
+				INSERT INTO url_data (actual_url, num_redirects)
+				VALUES ('%(actual_url)s', '%(num_redirects)s')
+			"""%{'actual_url': actual_url, 'num_redirects': 0}
 			result_cursor = cursor.execute(query)
+	return render_template('index.html')
+
+@app.route('/links', methods=['POST', 'GET'])
+def linkspage():
 	if request.method == 'GET':
 		with sqlite3.connect('url.db') as db:
 			cursor = db.cursor()
 			query = ('SELECT * FROM url_data')
 			cursor.execute(query)
 			return json.dumps(repr(cursor.fetchall()))
-	return render_template('index.html')
-
-
-
 
 if __name__ == "__main__":
 	table_schema()
-	app.run()
+	app.run(debug=True)
