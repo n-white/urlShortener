@@ -54,18 +54,27 @@ def table_schema():
 		except OperationalError:
 			pass
 
+# Routing for adding a new url to the database
 @app.route('/', methods=['POST', 'GET'])
 def homepage():
 	actual_url = request.form.get('actual_url')
-	# shortened_url = short_url.decode_url(actual_url)
 	if request.method == 'POST':
 		with sqlite3.connect('url.db') as db:
 			cursor = db.cursor()
-			query = """
+			save_url = """
 				INSERT INTO url_data (actual_url, num_redirects)
 				VALUES ('%(actual_url)s', '%(num_redirects)s')
 			"""%{'actual_url': actual_url, 'num_redirects': 0}
-			result_cursor = cursor.execute(query)
+			# Execute the query to add the new url to the database
+			execute_cursor = cursor.execute(save_url)
+			# Get the id of the new entry and encode it with base62 methodology
+			current_id = execute_cursor.lastrowid
+			shortened_url = encode_base62(current_id)
+			# Save the encoded ID to the shortened_url column
+			cursor.execute("""
+				UPDATE url_data SET shortened_url='%(shortened_url)s'
+				WHERE ID='%(current_id)s'
+			"""%{'shortened_url': shortened_url, 'current_id': current_id})			
 	return render_template('index.html')
 
 @app.route('/links', methods=['POST', 'GET'])
