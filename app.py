@@ -1,9 +1,8 @@
-from flask import Flask, request, render_template
+import flask
+from flask import Flask, request, render_template, Response
 import sqlite3
 from sqlite3 import OperationalError
 import json
-import short_url
-
 
 # Declare app variable
 app = Flask(__name__)
@@ -83,10 +82,17 @@ def homepage():
 def linkspage():
 	if request.method == 'GET':
 		with sqlite3.connect('url.db') as db:
+			db.text_factory = str
 			cursor = db.cursor()
-			query = ('SELECT * FROM url_data')
-			cursor.execute(query)
-			return json.dumps(repr(cursor.fetchall()))
+			entire_db = cursor.execute('SELECT * FROM url_data')
+			# Convert the results from a list to a dictionary so that it can be stringified properly
+			db_dict = {}
+			for row in entire_db:
+				db_dict[row[1]] = row
+			print db_dict
+			return flask.jsonify(**db_dict)
+		    # db_dict[item[0]] = item
+		  # print '?@?@?@?@?@?@?@?@', db_dict
 
 if __name__ == "__main__":
 	table_schema()

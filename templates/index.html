@@ -57,8 +57,11 @@
             }
 
             $.ajax(settings).done(function (response) {
-               console.log(response);
+               client.populateUrls(response);
             });
+         },
+         populateUrls: function(list) {
+            console.log(list)
          }
       }
 
