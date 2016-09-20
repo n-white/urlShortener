@@ -7,7 +7,7 @@ import json
 # Declare app variable
 app = Flask(__name__)
 
-# String of characters referened for encoding and decoding
+# String of characters referenced for encoding and decoding
 base_62_alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 # Function to encode string using base 62 methodology
