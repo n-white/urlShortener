@@ -58,7 +58,9 @@ def table_schema():
 @app.route('/', methods=['POST', 'GET'])
 def homepage():
 	if request.method == 'POST':
-		actual_url = request.form.get('actual_url')
+		# actual_url = request.form.get('actual_url')
+		actual_url = request.json['actual_url']
+		print '!!!!!!!????', actual_url
 		with sqlite3.connect('url.db') as db:
 			cursor = db.cursor()
 			save_url = """
