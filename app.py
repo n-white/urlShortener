@@ -57,8 +57,8 @@ def table_schema():
 # Routing for adding a new url to the database
 @app.route('/', methods=['POST', 'GET'])
 def homepage():
-	actual_url = request.form.get('actual_url')
 	if request.method == 'POST':
+		actual_url = request.form.get('actual_url')
 		with sqlite3.connect('url.db') as db:
 			cursor = db.cursor()
 			save_url = """
