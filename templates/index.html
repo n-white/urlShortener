@@ -70,12 +70,16 @@
             }
          },
          addUrl: function(url) {
-            $('<a>', {
+            var $link = $('<a>', {
                text: 'http://localhost:5000/' + url[1],
                title:'none',
                href: url[1],
-            }).appendTo(client.$linkList)
-            // client.$linkList.append($url);
+            });
+            var $original = $('<div>').val(url[2]).text(url[2]);
+            var $elem = $('<div></div>');
+            $elem.html('<a href="http://localhost:5000/'+url[1]+'">http://localhost:5000/' + url[1] + '</a>' +
+               '<p>'+url[2]+'<p><p>Number of Redirects: '+url[3]+'</p>');
+            $elem.appendTo(client.$linkList);
          }
 
       }
