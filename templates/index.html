@@ -17,10 +17,11 @@
    <script>
       var client = {
          init: function() {
-            client.$newurl = $('#newurl')
-            client.$send = $('#send')
-            client.$send.on('submit', client.handleSubmit)
-            client.$linkList = $('#linkList')
+            client.$newurl = $('#newurl');
+            client.$send = $('#send');
+            client.$send.on('submit', client.handleSubmit);
+            client.$linkList = $('#linkList');
+            client.fetch();
          },
          handleSubmit: function(event) {
             // Create a message variable that will be sent in POST request
@@ -69,8 +70,12 @@
             }
          },
          addUrl: function(url) {
-            var $url = $('<div>').val(url).text(url)
-            client.$linkList.append($url);
+            $('<a>', {
+               text: 'http://localhost:5000/' + url[1],
+               title:'none',
+               href: url[1],
+            }).appendTo(client.$linkList)
+            // client.$linkList.append($url);
          }
 
       }

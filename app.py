@@ -1,5 +1,5 @@
 import flask
-from flask import Flask, request, render_template, Response
+from flask import Flask, redirect, request, render_template, Response
 import sqlite3
 from sqlite3 import OperationalError
 import json
@@ -33,9 +33,6 @@ def decode_base62(string, alphabet=base_62_alphabet):
 		index += 1
 	return num
 
-test = decode_base62('3e')
-print test
-
 def table_schema():
 	# Create url_data table in SQL
 	with sqlite3.connect('url.db') as db:
@@ -45,7 +42,7 @@ def table_schema():
 			ID INTEGER PRIMARY KEY AUTOINCREMENT,
 			shortened_url text,
 			actual_url text,
-			num_redirects text,
+			num_redirects integer,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
 			"""
 		try:
@@ -93,6 +90,26 @@ def linkspage():
 			return flask.jsonify(**db_dict)
 		    # db_dict[item[0]] = item
 		  # print '?@?@?@?@?@?@?@?@', db_dict
+
+# Redirect to actual url using Flask dynamic routing
+@app.route('/<encoded_url>')
+def actual_url_redirect(encoded_url):
+    with sqlite3.connect('url.db') as db:
+        cursor = db.cursor()
+        db.text_factory = str
+        # Query to select the row that corresponds to the encoded URL
+        query_url = """
+                SELECT actual_url FROM url_data
+                    WHERE id=%s
+                """%(decode_base62(encoded_url))
+        # Row has been selected, now we want to find the original url for redirection
+       	actual_url = cursor.execute(query_url).fetchone()[0]
+       	# Increment the redirect count in SQL for that url
+       	increment_redirects = """
+       	"""
+    # Redirect to the original url using redirect
+    return redirect(actual_url)
+
 
 if __name__ == "__main__":
 	table_schema()
