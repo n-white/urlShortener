@@ -46,9 +46,20 @@
 
             // POST the message to the server
             $.ajax(settings).done(function (response) {
-            console.log(response);
+               client.fetch();               
             });
          },
+         fetch: function() {
+            var settings = {
+               "async": true,
+               "url": "http://localhost:5000/links",
+               "method": "GET",
+            }
+
+            $.ajax(settings).done(function (response) {
+               console.log(response);
+            });
+         }
       }
 
       $(function(){
