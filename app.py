@@ -6,6 +6,7 @@ import json
 
 # Declare app variable
 app = Flask(__name__)
+app.config.from_object(__name__)
 
 # String of characters referenced for encoding and decoding
 base_62_alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -34,9 +35,14 @@ def decode_base62(string, alphabet=base_62_alphabet):
 		index += 1
 	return num
 
+# Define database file
+database_name = 'url.db'
+def update_database(new_db_name):
+	database_name = new_db_name
+
 # Function to create url_data table in SQL
 def table_schema():
-	with sqlite3.connect('url.db') as db:
+	with sqlite3.connect(database_name) as db:
 		cursor = db.cursor()
 		table_creation = """
 			CREATE TABLE url_data(
@@ -58,7 +64,7 @@ def homepage():
 	if request.method == 'POST':
 		# Parse out the actual_url sent from the client
 		actual_url = request.json['actual_url']
-		with sqlite3.connect('url.db') as db:
+		with sqlite3.connect(database_name) as db:
 			cursor = db.cursor()
 			# Query for saving new url to the database
 			save_url = """
@@ -74,14 +80,15 @@ def homepage():
 			cursor.execute("""
 				UPDATE url_data SET shortened_url='%(shortened_url)s'
 				WHERE ID='%(current_id)s'
-			"""%{'shortened_url': shortened_url, 'current_id': current_id})			
+			"""%{'shortened_url': shortened_url, 'current_id': current_id})
+			return 'Updated successfully'
 	return render_template('index.html')
 
 # Request to get full list of URL data in SQL
 @app.route('/links', methods=['POST', 'GET'])
 def links():
 	if request.method == 'GET':
-		with sqlite3.connect('url.db') as db:
+		with sqlite3.connect(database_name) as db:
 			db.text_factory = str
 			cursor = db.cursor()
 			# Select all data from the table
@@ -97,7 +104,7 @@ def links():
 # Redirect to actual url using Flask dynamic routing
 @app.route('/<encoded_url>')
 def actual_url_redirect(encoded_url):
-    with sqlite3.connect('url.db') as db:
+    with sqlite3.connect(database_name) as db:
         # Decode the shortened url into the original ID
         decoded_url = decode_base62(encoded_url)
         cursor = db.cursor()
@@ -119,6 +126,9 @@ def actual_url_redirect(encoded_url):
 
 
 if __name__ == "__main__":
+	# Execute url_data table creation in database
 	table_schema()
 	# Running app in debug mode for development
-	app.run(debug=True)
+	app.run(
+        debug=True
+    )
