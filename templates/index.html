@@ -12,12 +12,15 @@
       </form>
    </div>
 
+   <div id="linkList"><div>
+
    <script>
       var client = {
          init: function() {
             client.$newurl = $('#newurl')
             client.$send = $('#send')
             client.$send.on('submit', client.handleSubmit)
+            client.$linkList = $('#linkList')
          },
          handleSubmit: function(event) {
             // Create a message variable that will be sent in POST request
@@ -61,8 +64,15 @@
             });
          },
          populateUrls: function(list) {
-            console.log(list)
+            for (key in list) {
+               client.addUrl(list[key]);
+            }
+         },
+         addUrl: function(url) {
+            var $url = $('<div>').val(url).text(url)
+            client.$linkList.append($url);
          }
+
       }
 
       $(function(){
