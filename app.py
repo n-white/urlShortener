@@ -95,18 +95,22 @@ def linkspage():
 @app.route('/<encoded_url>')
 def actual_url_redirect(encoded_url):
     with sqlite3.connect('url.db') as db:
+        decoded_url = decode_base62(encoded_url)
+        print '######', decoded_url
         cursor = db.cursor()
         db.text_factory = str
         # Query to select the row that corresponds to the encoded URL
         query_url = """
-                SELECT actual_url FROM url_data
-                    WHERE id=%s
-                """%(decode_base62(encoded_url))
+          SELECT actual_url FROM url_data
+            WHERE id=%s
+          """%(decoded_url)
         # Row has been selected, now we want to find the original url for redirection
        	actual_url = cursor.execute(query_url).fetchone()[0]
        	# Increment the redirect count in SQL for that url
-       	increment_redirects = """
-       	"""
+       	cursor.execute("""
+	       	UPDATE url_data SET num_redirects=num_redirects+1 
+	       		WHERE id=%s
+	       	"""%(decoded_url))
     # Redirect to the original url using redirect
     return redirect(actual_url)
 
