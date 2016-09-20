@@ -22,6 +22,7 @@ def encode_base62(num, alphabet=base_62_alphabet):
 	result.reverse()
 	return ''.join(result)
 
+# Function to decode a string to original string
 def decode_base62(string, alphabet=base_62_alphabet):
 	base = len(alphabet)
 	string_length = len(string)
@@ -33,8 +34,8 @@ def decode_base62(string, alphabet=base_62_alphabet):
 		index += 1
 	return num
 
+# Function to create url_data table in SQL
 def table_schema():
-	# Create url_data table in SQL
 	with sqlite3.connect('url.db') as db:
 		cursor = db.cursor()
 		table_creation = """
@@ -45,6 +46,7 @@ def table_schema():
 			num_redirects integer,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
 			"""
+		# Create table if not already created
 		try:
 			cursor.execute(table_creation)
 		except OperationalError:
@@ -54,11 +56,11 @@ def table_schema():
 @app.route('/', methods=['POST', 'GET'])
 def homepage():
 	if request.method == 'POST':
-		# actual_url = request.form.get('actual_url')
+		# Parse out the actual_url sent from the client
 		actual_url = request.json['actual_url']
-		print '!!!!!!!????', actual_url
 		with sqlite3.connect('url.db') as db:
 			cursor = db.cursor()
+			# Query for saving new url to the database
 			save_url = """
 				INSERT INTO url_data (actual_url, num_redirects)
 				VALUES ('%(actual_url)s', '%(num_redirects)s')
@@ -75,31 +77,32 @@ def homepage():
 			"""%{'shortened_url': shortened_url, 'current_id': current_id})			
 	return render_template('index.html')
 
+# Request to get full list of URL data in SQL
 @app.route('/links', methods=['POST', 'GET'])
-def linkspage():
+def links():
 	if request.method == 'GET':
 		with sqlite3.connect('url.db') as db:
 			db.text_factory = str
 			cursor = db.cursor()
+			# Select all data from the table
 			entire_db = cursor.execute('SELECT * FROM url_data')
-			# Convert the results from a list to a dictionary so that it can be stringified properly
+			# Convert the results from a list to a dictionary...
+			# ... so that it can be stringified properly with flask.jsonify
 			db_dict = {}
 			for row in entire_db:
 				db_dict[row[1]] = row
 			print db_dict
 			return flask.jsonify(**db_dict)
-		    # db_dict[item[0]] = item
-		  # print '?@?@?@?@?@?@?@?@', db_dict
 
 # Redirect to actual url using Flask dynamic routing
 @app.route('/<encoded_url>')
 def actual_url_redirect(encoded_url):
     with sqlite3.connect('url.db') as db:
+        # Decode the shortened url into the original ID
         decoded_url = decode_base62(encoded_url)
-        print '######', decoded_url
         cursor = db.cursor()
         db.text_factory = str
-        # Query to select the row that corresponds to the encoded URL
+        # Query to select the row that corresponds to the decoded ID
         query_url = """
           SELECT actual_url FROM url_data
             WHERE id=%s
@@ -117,4 +120,5 @@ def actual_url_redirect(encoded_url):
 
 if __name__ == "__main__":
 	table_schema()
+	# Running app in debug mode for development
 	app.run(debug=True)
