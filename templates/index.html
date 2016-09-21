@@ -2,10 +2,109 @@
 <html>
 <head>
    <title></title>
+   <script src="https://code.jquery.com/jquery-3.1.0.js" integrity="sha256-slogkvB1K3VOkzAI8QITxV3VzpOnkeNVsKvtkYLMjfk=" crossorigin="anonymous"></script>
 </head>
 <body>
    <div>
-      <p>TEST</p>
+      <form action="#" id="send" method="post">
+         <input type="text" placeholder="Enter a new URL" id="newurl">
+         <input type="submit" class="submit" value="Submit">
+      </form>
    </div>
+
+   <div id="linkList"><div>
+   
+   <script>
+
+   var client = {
+         init: function() {
+            client.$newurl = $('#newurl');
+            client.$send = $('#send');
+            client.$send.on('submit', client.handleSubmit);
+            client.$linkList = $('#linkList');
+            client.fetch();
+            client.browserDevice = null
+            client.defineBrowser = function() {
+               if (/iphone/i.test(navigator.userAgent.toLowerCase())) {
+                  client.browserDevice = 'mobile';
+               }
+               if (/ipad/i.test(navigator.userAgent.toLowerCase())) {
+                  client.browserDevice = 'tablet';
+               }
+               if (/mozilla|chrome/i.test(navigator.userAgent.toLowerCase())) {
+                  client.browserDevice = 'desktop';
+               }
+               console.log('Browser device: ', client.browserDevice)
+            }
+            client.defineBrowser();
+            
+         },
+         handleSubmit: function(event) {
+            // Create a message variable that will be sent in POST request
+            var message = {
+               'actual_url': client.$newurl.val(),
+               'device_type': client.defineBrowser
+            }
+
+            // Call the send method which will make a POST request
+            client.send(message)
+
+            // Stop the form from submitting
+            event.preventDefault();
+         },
+         send: function(message) {
+            // Clear the newurl input
+            client.$newurl.val('');
+
+            // Define parameters of the POST request
+            var settings = {
+               "async": true,
+               "url": "http://localhost:5000/",
+               "method": "POST",
+               "contentType": "application/json",
+               "data": JSON.stringify(message)
+            }
+
+            // POST the message to the server
+            $.ajax(settings).done(function (response) {
+               console.log('response', response);
+               client.fetch();               
+            });
+         },
+         fetch: function() {
+            var settings = {
+               "async": true,
+               "url": "http://localhost:5000/links",
+               "method": "GET",
+            }
+
+            $.ajax(settings).done(function (response) {
+               client.populateUrls(response);
+            });
+         },
+         populateUrls: function(list) {
+            for (key in list) {
+               client.addUrl(list[key]);
+            }
+         },
+         addUrl: function(url) {
+            var $link = $('<a>', {
+               text: 'http://localhost:5000/' + url[1],
+               title:'none',
+               href: url[1],
+            });
+            var $elem = $('<div></div>');
+            $elem.html('<a href="http://localhost:5000/'+url[1]+'?device='+client.browserDevice+'">http://localhost:5000/' + url[1] + '</a>' +
+               '<p>'+url[2]+'<p><p>Number of Redirects: '+url[3]+'</p>'+
+               '<p>'+url[4]+'</p>');
+            $elem.appendTo(client.$linkList);
+         }
+
+      }
+
+      $(function(){
+        client.init()
+      });
+   </script>
 </body>
 </html>
