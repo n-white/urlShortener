@@ -7,10 +7,14 @@
 <body>
    <div>
       <form action="#" id="send" method="post">
-         <input type="text" placeholder="Enter a new URL" id="newurl">
+         <input type="text" placeholder="Enter a DESKTOP URL" id="desktopUrl">
+         <input type="text" placeholder="Enter a MOBILE URL" id="mobileUrl">
+         <input type="text" placeholder="Enter a TABLET URL" id="tabletUrl">
          <input type="submit" class="submit" value="Submit">
       </form>
    </div>
+   <br>
+   <br>
 
    <div id="linkList"><div>
    
@@ -18,7 +22,13 @@
 
    var client = {
          init: function() {
-            client.$newurl = $('#newurl');
+            // Define variables for the desktop, mobile, tablet URLs
+            client.$desktopUrl = $('#desktopUrl');
+            client.$mobileUrl = $('#mobileUrl');
+            client.$tabletUrl = $('#tabletUrl');
+
+
+            // Setup listener on submit button
             client.$send = $('#send');
             client.$send.on('submit', client.handleSubmit);
             client.$linkList = $('#linkList');
@@ -41,10 +51,14 @@
          },
          handleSubmit: function(event) {
             // Create a message variable that will be sent in POST request
+            
+
             var message = {
-               'actual_url': client.$newurl.val(),
-               'device_type': client.defineBrowser
+               'desktop_url': client.$desktopUrl.val(),
+               'mobile_url': client.$mobileUrl.val(),
+               'tablet_url': client.$tabletUrl.val()
             }
+
 
             // Call the send method which will make a POST request
             client.send(message)
@@ -54,7 +68,9 @@
          },
          send: function(message) {
             // Clear the newurl input
-            client.$newurl.val('');
+            client.$desktopUrl.val('');
+            client.$mobileUrl.val('');
+            client.$tabletUrl.val('');
 
             // Define parameters of the POST request
             var settings = {
@@ -64,6 +80,8 @@
                "contentType": "application/json",
                "data": JSON.stringify(message)
             }
+
+            console.log(settings);
 
             // POST the message to the server
             $.ajax(settings).done(function (response) {
@@ -93,10 +111,13 @@
                title:'none',
                href: url[1],
             });
-            var $elem = $('<div></div>');
+            var $elem = $('<div style="border: 1px solid black;"></div>');
             $elem.html('<a href="http://localhost:5000/'+url[1]+'?device='+client.browserDevice+'">http://localhost:5000/' + url[1] + '</a>' +
-               '<p>'+url[2]+'<p><p>Number of Redirects: '+url[3]+'</p>'+
-               '<p>'+url[4]+'</p>');
+               '<p>Desktop URL: '+url[2]+'<p>'+
+               '<p>Mobile URL: '+url[3]+'<p>'+
+               '<p>Tablet URL: '+url[4]+'<p>'+
+               '<p>Number of Redirects: '+url[5]+'</p>'+
+               '<p>Created at: '+url[6]+'</p>');
             $elem.appendTo(client.$linkList);
          }
 
