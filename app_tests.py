@@ -12,7 +12,9 @@ class FlaskTestCase(unittest.TestCase):
 	# Test that post requests are saved to DB successfully
 	def test_post_request(self):
 		tester = app.test_client(self)
-		response = tester.post('/', data='{"actual_url":"http://www.nothing.com"}', content_type='application/json')
+		response = tester.post('/', 
+			data='{"desktop_url":"http://www.github.com","mobile_url":"http://www.github.com","tablet_url":"http://www.github.com"}', 
+			content_type='application/json')
 		self.assertEqual(response.status_code, 200)
 
 	# Test that get requests successfully retrieve information

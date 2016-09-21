@@ -48,7 +48,9 @@ def table_schema():
 			CREATE TABLE url_data(
 			ID INTEGER PRIMARY KEY AUTOINCREMENT,
 			shortened_url text,
-			actual_url text,
+			desktop_url text,
+			mobile_url text,
+			tablet_url text,
 			num_redirects integer,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
 			"""
@@ -62,15 +64,17 @@ def table_schema():
 @app.route('/', methods=['POST', 'GET'])
 def homepage():
 	if request.method == 'POST':
-		# Parse out the actual_url sent from the client
-		actual_url = request.json['actual_url']
+		# Parse out the original urls sent from the client
+		desktop_url = request.json['desktop_url']
+		mobile_url = request.json['mobile_url']
+		tablet_url = request.json['tablet_url']
 		with sqlite3.connect(database_name) as db:
 			cursor = db.cursor()
 			# Query for saving new url to the database
 			save_url = """
-				INSERT INTO url_data (actual_url, num_redirects)
-				VALUES ('%(actual_url)s', '%(num_redirects)s')
-			"""%{'actual_url': actual_url, 'num_redirects': 0}
+				INSERT INTO url_data (desktop_url, mobile_url, tablet_url, num_redirects)
+				VALUES ('%(desktop_url)s', '%(mobile_url)s', '%(tablet_url)s', '%(num_redirects)s')
+			"""%{'desktop_url': desktop_url, 'mobile_url': mobile_url, 'tablet_url': tablet_url, 'num_redirects': 0}
 			# Execute the query to add the new url to the database
 			execute_cursor = cursor.execute(save_url)
 			# Get the id of the new entry and encode it with base62 methodology
@@ -82,7 +86,7 @@ def homepage():
 				WHERE ID='%(current_id)s'
 			"""%{'shortened_url': shortened_url, 'current_id': current_id})
 			# Send response with the information on the updated row
-			return flask.jsonify(**{'current_id': current_id, 'shortened_url': shortened_url, 'actual_url': actual_url})
+			return flask.jsonify(**{'current_id': current_id, 'shortened_url': shortened_url})
 	return render_template('index.html')
 
 # Request to get full list of URL data in SQL
@@ -106,26 +110,44 @@ def links():
 @app.route('/<encoded_url>')
 def actual_url_redirect(encoded_url):
     with sqlite3.connect(database_name) as db:
-        device = request.args.get('device')
-        print '!#!#!#!?', device
-        # Decode the shortened url into the original ID
-        decoded_url = decode_base62(encoded_url)
-        cursor = db.cursor()
-        db.text_factory = str
-        # Query to select the row that corresponds to the decoded ID
-        query_url = """
-          SELECT actual_url FROM url_data
-            WHERE id=%s
-          """%(decoded_url)
-        # Row has been selected, now we want to find the original url for redirection
-       	actual_url = cursor.execute(query_url).fetchone()[0]
-       	# Increment the redirect count in SQL for that url
-       	cursor.execute("""
-	       	UPDATE url_data SET num_redirects=num_redirects+1 
-	       		WHERE id=%s
-	       	"""%(decoded_url))
-    # Redirect to the original url using redirect
-    return redirect(actual_url)
+	    device = request.args.get('device')
+	    # Decode the shortened url into the original ID
+	    decoded_url = decode_base62(encoded_url)
+	    cursor = db.cursor()
+	    db.text_factory = str
+	    # Query to select the row that corresponds to the decoded ID
+	    # Query for desktop
+	    desktop_url = """
+	      SELECT desktop_url FROM url_data
+	        WHERE id=%s
+	      """%(decoded_url)
+	    # Query for mobile
+	    mobile_url = """
+	      SELECT mobile_url FROM url_data
+	        WHERE id=%s
+	      """%(decoded_url)
+	    # Query for tablet
+	    tablet_url = """
+	      SELECT tablet_url FROM url_data
+	        WHERE id=%s
+	      """%(decoded_url)	   	
+	    # Row has been selected, now we want to find the original url for redirection
+	    # Make selection based on the device type
+	    if (device == 'desktop'):
+		   	# Increment the redirect count in SQL for that url
+	    	cursor.execute("""UPDATE url_data SET num_redirects=num_redirects+1 WHERE id=%s"""%(decoded_url))
+	     	# Redirect to the desktop url
+	     	return redirect(cursor.execute(desktop_url).fetchone()[0])
+	    if (device == 'mobile'):
+	    	# Increment the redirect count in SQL for that url
+	    	cursor.execute("""UPDATE url_data SET num_redirects=num_redirects+1 WHERE id=%s"""%(decoded_url))
+	    	# Redirect to the mobile url
+	     	return redirect(cursor.execute(mobile_url).fetchone()[0])
+	    if (device == 'tablet'):
+	    	# Increment the redirect count in SQL for that url
+	    	cursor.execute("""UPDATE url_data SET num_redirects=num_redirects+1 WHERE id=%s"""%(decoded_url))
+	    	# Redirect to the tablet url
+	     	return redirect(cursor.execute(tablet_url).fetchone()[0])
 
 
 if __name__ == "__main__":
