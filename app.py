@@ -2,7 +2,6 @@ import flask
 from flask import Flask, redirect, request, render_template, Response
 import sqlite3
 from sqlite3 import OperationalError
-import json
 
 # Declare app variable
 app = Flask(__name__)
