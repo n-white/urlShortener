@@ -23,11 +23,27 @@
             client.$send.on('submit', client.handleSubmit);
             client.$linkList = $('#linkList');
             client.fetch();
+            client.browserDevice = null
+            client.defineBrowser = function() {
+               if (/iphone/i.test(navigator.userAgent.toLowerCase())) {
+                  client.browserDevice = 'mobile';
+               }
+               if (/ipad/i.test(navigator.userAgent.toLowerCase())) {
+                  client.browserDevice = 'tablet';
+               }
+               if (/mozilla|chrome/i.test(navigator.userAgent.toLowerCase())) {
+                  client.browserDevice = 'desktop';
+               }
+               console.log('Browser device: ', client.browserDevice)
+            }
+            client.defineBrowser();
+            
          },
          handleSubmit: function(event) {
             // Create a message variable that will be sent in POST request
             var message = {
-               'actual_url': client.$newurl.val()
+               'actual_url': client.$newurl.val(),
+               'device_type': client.defineBrowser
             }
 
             // Call the send method which will make a POST request
@@ -78,7 +94,7 @@
                href: url[1],
             });
             var $elem = $('<div></div>');
-            $elem.html('<a href="http://localhost:5000/'+url[1]+'">http://localhost:5000/' + url[1] + '</a>' +
+            $elem.html('<a href="http://localhost:5000/'+url[1]+'?device='+client.browserDevice+'">http://localhost:5000/' + url[1] + '</a>' +
                '<p>'+url[2]+'<p><p>Number of Redirects: '+url[3]+'</p>'+
                '<p>'+url[4]+'</p>');
             $elem.appendTo(client.$linkList);

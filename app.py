@@ -81,7 +81,8 @@ def homepage():
 				UPDATE url_data SET shortened_url='%(shortened_url)s'
 				WHERE ID='%(current_id)s'
 			"""%{'shortened_url': shortened_url, 'current_id': current_id})
-			return 'Updated successfully'
+			# Send response with the information on the updated row
+			return flask.jsonify(**{'current_id': current_id, 'shortened_url': shortened_url, 'actual_url': actual_url})
 	return render_template('index.html')
 
 # Request to get full list of URL data in SQL
@@ -105,6 +106,8 @@ def links():
 @app.route('/<encoded_url>')
 def actual_url_redirect(encoded_url):
     with sqlite3.connect(database_name) as db:
+        device = request.args.get('device')
+        print '!#!#!#!?', device
         # Decode the shortened url into the original ID
         decoded_url = decode_base62(encoded_url)
         cursor = db.cursor()
@@ -129,6 +132,4 @@ if __name__ == "__main__":
 	# Execute url_data table creation in database
 	table_schema()
 	# Running app in debug mode for development
-	app.run(
-        debug=True
-    )
+	app.run(debug=True)
