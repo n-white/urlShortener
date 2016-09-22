@@ -85,7 +85,7 @@ def homepage():
 				WHERE ID='%(current_id)s'
 			"""%{'shortened_url': shortened_url, 'current_id': current_id})
 			# Send response with the information on the updated row
-			return flask.jsonify(**{'current_id': current_id, 'shortened_url': shortened_url})
+			return flask.jsonify(**{'shortened_url': shortened_url})
 	return render_template('index.html')
 
 # Request to get full list of URL data in SQL
